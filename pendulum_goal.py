@@ -6,11 +6,15 @@ def pendulum_torque(t):
 
 def pendulum_f(x, t, params):
     g, l, m, z = params
+
     theta = x[0]
     thetap = x[1]
 
     f = zeros(2)
     z = sin(theta)
+    
+    omegap = -g/l*sin(theta) + torque/(m*l*l)
+    thetap = omega
     f[0] = thetap
     f[1] = -g/l*z + pendulum_torque(t) / (m*l*l)
     #f[1] = -g/l*sin(theta) + pendulum_torque(t) / (m*l*l)
