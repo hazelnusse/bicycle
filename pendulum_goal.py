@@ -8,17 +8,18 @@ def pendulum_f(x, t, params):
     g, l, m, z = params
 
     theta = x[0]
-    thetap = x[1]
+    omega = x[1]
 
-    f = zeros(2)
-    z = sin(theta)
+    z[0] = sin(theta)
     
-    omegap = -g/l*sin(theta) + torque/(m*l*l)
     thetap = omega
+    omegap = -g/l*z[0] + torque/(m*l*l)
+    
+    f = zeros(2)
     f[0] = thetap
-    f[1] = -g/l*z + pendulum_torque(t) / (m*l*l)
-    #f[1] = -g/l*sin(theta) + pendulum_torque(t) / (m*l*l)
-    params[3] = z
+    f[1] = omegap 
+
+    params[3] = z[0]
     return f
 
 
