@@ -1,7 +1,7 @@
 from numpy import zeros, sin, pi
 from numpy import linspace, array
 from scipy.integrate import odeint
-from matplotlib.pyplot import figure, plot, show
+from matplotlib.pyplot import figure, plot, show, legend, xlabel
 
 class DynamicSystem:
     """Dynamic System class.
@@ -21,6 +21,9 @@ class DynamicSystem:
         # state names and their initial conditions
         self.states = ['theta',
                        'omega']
+
+        self.units = ['radians',
+                      'radians per second']
 
         # sets the initial conditions of the states
         self.x = array([0.,
@@ -66,7 +69,7 @@ class DynamicSystem:
         return f
 
     def inputs(self, t):
-        torque = 10*sin(2*pi*t + pi/6)
+        torque = 0 #10*sin(2*pi*t + pi/6)
         return torque
 
     def simulate(self):
@@ -78,4 +81,6 @@ class DynamicSystem:
     def plot(self):
         '''Makes a plot of the simulation'''
         plot(self.t, self.y)
+        legend(self.states)
+        xlabel('Time [sec]')
         show()
