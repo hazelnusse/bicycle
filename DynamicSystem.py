@@ -2,58 +2,70 @@ from numpy import zeros, sin, pi
 from numpy import linspace, array
 from scipy.integrate import odeint
 
+
 class DynamicSystem:
     """Dynamic System class.
 
     """
 
-    def __init__(self):
+    def __init__(self,name):
+
+        # model name
+        self.name = name
 
         # parameter names and their values
         self.parameters = {'g':9.81,
                            'l':1.,
                            'm':1.}
         # state names and their initial conditions
-        self.states = {'theta':(0, 0.),
-                       'omega':(1, 0.),
-                       'thetap':(2, 0.),
-                       'omegap':(3, 0.)}
+        self.states = ['theta',
+                       'omega']
+        # sets the initial conditions of the states
+        self.x = array([0.,
+                        0.])
+        # sets the time to the initial time
+        self.t = 0.
+        # initializes the zees
+        self.z = zeros(1)
         # numerical integration parameters
         self.numint = {'ti':0.,
                        'tf':10.}
 
-    def f(self, x, t, params):
+    def f(self):
+        '''Returns the derivative of the states'''
 
         # defines the parameters from the attribute
-        for parameter, value in params.items():
+        for parameter, value in self.parameters.items():
             exec(parameter + ' = ' + str(value))
 
-        theta = x[0]
-        omega = x[1]
+        # sets the current state
+        theta = self.x[0]
+        omega = self.x[1]
 
-        z = zeros(1)
-        z[0] = sin(theta)
+        # sets the zees
+        self.z[0] = sin(theta)
 
-        torque = inputs(t)[0]
+        # calculates inputs
+        torque = self.inputs()
 
+        # calculates the derivatives of the states
         thetap = omega
-        omegap = -g/l*z[0] + torque/(m*l*l)
+        omegap = -g/l*self.z[0] + torque/(m*l*l)
 
+        # plug in the derivatives for returning
         f = zeros(2)
         f[0] = thetap
         f[1] = omegap
 
-        params[3] = z[0]
         return f
 
-    def inputs(self, t):
-        print pi
-        print t
-        torque = 10*sin(2*pi*t + pi/6)
-        print torque
-        inputs = zeros(1)
-        inputs[0] = torque
-        return inputs
+    def define(self):
+        def newfunc():
+            print 'dookie'
+
+    def inputs(self):
+        torque = 10*sin(2*pi*self.t + pi/6)
+        return torque
 
     def simulate(self, f, numint):
         t = linspace(numint['ti'], numint['tf'], 100)
@@ -77,3 +89,7 @@ class DynamicSystem:
             print "params =", params[3]
             # this guy is being calculated right now:w
             print "sin(x[i + 1][0] =", sin(x[i + 1, 0])
+
+# define the function
+#exec("def pendulum_f(x, t):
+    #print 'dookie'
