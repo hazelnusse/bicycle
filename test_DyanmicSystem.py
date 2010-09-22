@@ -8,7 +8,7 @@ print "Parameters: ", pen.parameters
 
 print "List of state names: ", pen.states
 
-print "Initial conditions: ", pen.x
+print "Initial conditions: ", pen.x_int
 
 print "Integration parameters: ", pen.numint
 

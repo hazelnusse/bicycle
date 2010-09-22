@@ -57,7 +57,7 @@ p = -m*g*dot(p_no_ao>,n2>)
 % a random output
 th2 = 2*theta
 
-output t,theta,omega,k,p
+output t,theta,omega,k,p,th2
 code dynamics() pendulum.c
 
 A[1,1] = d(theta', theta)
@@ -85,7 +85,7 @@ D[3,1] = d(k, torque)
 D[4,1] = d(p, torque)
 D[5,1] = d(th2, torque)
 
-encode theta',omega',k,p,A,B,C,D
+encode theta',omega',k,p,th2,A,B,C,D
 
 code algebraic() penalg.c
 
