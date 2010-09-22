@@ -1,2 +1,6 @@
 *.swp
 *.pyc
+*.all
+alTmp.*
+*.in
+*.dir

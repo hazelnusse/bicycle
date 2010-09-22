@@ -20,3 +20,9 @@ print "Simulate and plot"
 pen.simulate()
 
 pen.plot()
+
+linpen = ds.LinearDynamicSystem([0., 0.])
+
+linpen.simulate()
+
+linpen.plot()
