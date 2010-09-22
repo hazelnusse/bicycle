@@ -1,4 +1,4 @@
-from numpy import zeros, sin, cos, pi
+from numpy import zeros, sin, cos, pi, dot
 from numpy import linspace, array
 from scipy.integrate import odeint
 from matplotlib.pyplot import figure, plot, show, legend, xlabel
@@ -128,33 +128,42 @@ class DynamicSystem:
         show()
 
 class LinearDynamicSystem(DynamicSystem):
+
+    name = "Linear Pendulum"
+    
     def __init__(self, equi_points):
         '''This function should take the equilibrium points and calculate the
         linear system: A, B, C, D either numerically or with analytic
         expressions'''
-        self.name = "Linear Pendulum"
         self.equib = equi_points
-        A[0][0] = 0;
-        A[0][1] = 1;
-        A[1][0] = -0.5*z[13];
-        A[1][1] = 0;
-        B[0] = 0;
-        B[1] = z[3]/z[11];
-        C[0][0] = 1;
-        C[0][1] = 0;
-        C[1][0] = 0;
-        C[1][1] = 1;
-        C[2][0] = 0;
-        C[2][1] = 0.25*z[14];
-        C[3][0] = 0.5*z[16];
-        C[3][1] = 0;
-        C[4][0] = 2;
-        C[4][1] = 0;
-        D[0] = 0;
-        D[1] = 0;
-        D[2] = 0;
-        D[3] = 0;
-        D[4] = 0;
+        # sets the zees for the equilbrium points
+        DynamicSystem.f(self,self.equib,0.)
+        # defines the A, B, C, D matrices
+        self.A = zeros((2,2))
+        self.B = zeros(2)
+        self.C = zeros((5,2))
+        self.D = zeros(5)
+        self.A[0,0] = 0
+        self.A[0,1] = 1
+        self.A[1,0] = -0.5*self.z[13]
+        self.A[1,1] = 0
+        self.B[0] = 0
+        self.B[1] = self.z[3]/self.z[11]
+        self.C[0,0] = 1
+        self.C[0,1] = 0
+        self.C[1,0] = 0
+        self.C[1,1] = 1
+        self.C[2,0] = 0
+        self.C[2,1] = 0.25*self.z[14]
+        self.C[3,0] = 0.5*self.z[16]
+        self.C[3,1] = 0
+        self.C[4,0] = 2
+        self.C[4,1] = 0
+        self.D[0] = 0
+        self.D[1] = 0
+        self.D[2] = 0
+        self.D[3] = 0
+        self.D[4] = 0
 
     def f(self, x, t):
         '''Returns the derivative of the states'''
@@ -163,32 +172,13 @@ class LinearDynamicSystem(DynamicSystem):
         for parameter, value in self.parameters.items():
             exec(parameter + ' = ' + str(value))
 
-        # sets the current state
-        theta = x[0]
-        omega = x[1]
-
-        # sets the zees
-        self.z[0] = theta
-
         # calculates inputs
-        torque = self.inputs(t)
+        u = self.inputs(t)
 
-        self.A = array([[0.,   1.],
-                        [-g/l, 0.]])
+        xp = dot(self.A,x) + dot(self.B,u)
 
-        self.B = array([0., 1./(m*l*l)])
-
-        u = torque
-
-        #xp = self.A*x + self.B*u
-
-        #print xp
-        #thetap = xp[0]
-        #omegap = xp[1]
-
-        # calculates the derivatives of the states
-        thetap = omega
-        omegap = -g/l*self.z[0] + torque/(m*l*l)
+        thetap = xp[0]
+        omegap = xp[1]
 
         # plug in the derivatives for returning
         f = zeros(2)
