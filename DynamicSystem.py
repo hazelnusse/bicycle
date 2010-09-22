@@ -130,7 +130,7 @@ class DynamicSystem:
 class LinearDynamicSystem(DynamicSystem):
 
     name = "Linear Pendulum"
-    
+
     def __init__(self, equi_points):
         '''This function should take the equilibrium points and calculate the
         linear system: A, B, C, D either numerically or with analytic

@@ -21,6 +21,8 @@ pen.simulate()
 
 pen.plot()
 
+print pen.z
+
 linpen = ds.LinearDynamicSystem([0., 0.])
 
 linpen.simulate()
