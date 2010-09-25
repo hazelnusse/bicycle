@@ -328,7 +328,7 @@ class LinearPendulum(Pendulum):
 
         '''
         # sets the zees for the equilbrium points
-        DynamicSystem.f(self, equi_points, 0.)
+        Pendulum.f(self, equi_points, 0.)
         # defines the A, B, C, D matrices
         self.A = zeros((2,2))
         self.B = zeros(2)
