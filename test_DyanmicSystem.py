@@ -1,12 +1,12 @@
 import DynamicSystem as ds
 
-pen = ds.DynamicSystem()
+pen = ds.Pendulum()
 
 print "Name of the system: ", pen.name
 
 print "Parameters: ", pen.parameters
 
-print "List of state names: ", pen.states
+print "List of state names: ", pen.state_names
 
 print "Initial conditions: ", pen.x_init
 
@@ -23,7 +23,7 @@ pen.plot()
 
 print pen.z
 
-linpen = ds.LinearDynamicSystem([0., 0.])
+linpen = ds.LinearPendulum([0., 0.])
 
 linpen.simulate()
 

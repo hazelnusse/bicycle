@@ -33,7 +33,7 @@ class DynamicSystem:
     output_names = ['y1', 'y2']
 
     # initialize output vector
-    y = zeros(len(state_names))
+    y = zeros(len(output_names))
 
     # input names
     input_names = ['u1']
@@ -117,25 +117,36 @@ class DynamicSystem:
         # initialize the state vector
         x = zeros((len(t), len(self.state_names)))
         y = zeros((len(t), len(self.output_names)))
+        u = zeros((len(t), len(self.input_names)))
 
         # set the initial conditions
         x[0] = self.x_init
         y[0] = self.outputs(x[0])
+        u[0] = self.inputs(t[0])
 
         for i in range(len(t)-1):
             # set the interval
             t_int = [t[i], t[i+1]]
-            print "self.t before int = ", self.t
+            #print "self.t before int = ", self.t
+            #print "self.u before int = ", self.u
+            #print "self.x before int = ", self.x
+            #print "self.z before int = ", self.z
+            #print "self.y before int = ", self.y
             # return the next state
             x[i + 1] = odeint(self.f, x[i], t_int)[1, :]
-            print "self.t after int = ", self.t
             # calculate the outputs and store them
             y[i + 1] = self.outputs(x[i + 1])
+            u[i + 1] = self.inputs(t[i + 1])
             # update all the attributes
             self.t = t[i + 1]
             self.x = x[i + 1]
             self.y = y[i + 1]
-
+            self.u = u[i + 1]
+            #print "self.t after int = ", self.t
+            #print "self.u after int = ", self.u
+            #print "self.x after int = ", self.x
+            #print "self.z after int = ", self.z
+            #print "self.y after int = ", self.y
 
         # make a dictionary of the integration and save it to file
         intDict = {'t':t,
@@ -156,14 +167,14 @@ class DynamicSystem:
         '''
         intDict = pickle.load(open(self.directory + self.filename + '.p'))
         plot(intDict['t'], intDict['y'])
-        legend(self.state_names)
+        legend(self.output_names)
         xlabel('Time [sec]')
         show()
 
 class Pendulum(DynamicSystem):
     """
     A simple one degree of freedom pendulum with length, mass and moment of
-    inertia.
+    inertia and input torque.
 
     """
 
@@ -178,10 +189,7 @@ class Pendulum(DynamicSystem):
 
     # state names and their initial conditions
     state_names = ['theta',
-              'omega']
-
-    units = ['radians',
-             'radians per second']
+                   'omega']
 
     # sets the initial conditions of the states
     x_init = array([0.,
@@ -189,6 +197,22 @@ class Pendulum(DynamicSystem):
 
     # intialize state vector
     x = zeros(len(state_names))
+
+    # output names
+    output_names = ['theta',
+                    'omega',
+                    'kinetic energy',
+                    'potential energy',
+                    '2*theta']
+
+    # initialize output vector
+    y = zeros(len(output_names))
+
+    # input names
+    input_names = ['torque']
+
+    # initialize input vector
+    u = zeros(len(input_names))
 
     # sets the time to the initial time
     t = 0.
@@ -202,7 +226,7 @@ class Pendulum(DynamicSystem):
               'steps':100}
 
     def __init__(self):
-        '''Does nothing, but will parse the input text file'''
+        '''Does nothing'''
 
     def f(self, x, t):
         '''Returns the derivative of the states'''
@@ -237,11 +261,6 @@ class Pendulum(DynamicSystem):
         thetap = omega
         omegap = self.z[12]
 
-        # calculate the outputs
-        k = 0.125*(m*self.z[4]**2+4*i*self.z[3]**2)*omega**2
-        p = -0.5*g*l*m*self.z[1]
-        th2 = 2*theta
-
         # plug in the derivatives for returning
         f = zeros(2)
         f[0] = thetap
@@ -251,7 +270,21 @@ class Pendulum(DynamicSystem):
 
     def inputs(self, t):
         torque = 10*sin(2*pi*t + pi/6)
-        return torque
+        u = torque
+        return u
+
+    def outputs(self, x):
+        # defines the parameters locally from the attribute
+        for parameter, value in self.parameters.items():
+            exec(parameter + ' = ' + str(value))
+        theta = x[0]
+        omega = x[1]
+        # calculate the outputs
+        k = 0.125*(m*self.z[4]**2+4*i*self.z[3]**2)*omega**2
+        p = -0.5*g*l*m*self.z[1]
+        th2 = 2*theta
+        y = array([x[0], x[1], k, p, th2])
+        return y
 
 class LinearPendulum(Pendulum):
 
@@ -362,5 +395,3 @@ class LinearPendulum(Pendulum):
             legend(self.state_names)
             xlabel('Time [sec]')
         show()
-
-
