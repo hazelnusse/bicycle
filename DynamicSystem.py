@@ -1,7 +1,9 @@
 from numpy import zeros, sin, cos, pi, dot
-from numpy import linspace, array
+from numpy import linspace, array, rank
+from numpy.linalg import eig
 from scipy.integrate import odeint
-from matplotlib.pyplot import figure, plot, show, legend, xlabel
+from matplotlib.pyplot import figure, plot, show, legend, xlabel, title
+from matplotlib.pyplot import scatter, colorbar, cm, grid, axis
 import pickle
 
 class DynamicSystem:
@@ -136,8 +138,37 @@ class LinearDynamicSystem(DynamicSystem):
         linear system: A, B, C, D either numerically or with analytic
         expressions'''
         self.equib = equi_points
+        self.linear(self.equib)
+
+    def f(self, x, t):
+        '''Returns the derivative of the states'''
+
+        # defines the parameters from the attribute
+        for parameter, value in self.parameters.items():
+            exec(parameter + ' = ' + str(value))
+
+        # calculates inputs
+        u = self.inputs(t)
+
+        xp = dot(self.A,x) + dot(self.B,u)
+
+        thetap = xp[0]
+        omegap = xp[1]
+
+        # plug in the derivatives for returning
+        f = zeros(2)
+        f[0] = thetap
+        f[1] = omegap
+
+        return f
+
+    def linear(self, equi_points):
+        '''
+        Sets the A, B, C, D matrices based on the equi_points.
+
+        '''
         # sets the zees for the equilbrium points
-        DynamicSystem.f(self,self.equib,0.)
+        DynamicSystem.f(self, equi_points, 0.)
         # defines the A, B, C, D matrices
         self.A = zeros((2,2))
         self.B = zeros(2)
@@ -165,24 +196,47 @@ class LinearDynamicSystem(DynamicSystem):
         self.D[3] = 0
         self.D[4] = 0
 
-    def f(self, x, t):
-        '''Returns the derivative of the states'''
+    def eig(self, *args, **kwargs):
+        '''
+        Calculates the eigenvalues of the system.
+        '''
 
-        # defines the parameters from the attribute
-        for parameter, value in self.parameters.items():
-            exec(parameter + ' = ' + str(value))
+        # is the first arg a parameter?
+        if args[0] in self.parameters.keys():
+            par_range = linspace(kwargs['range'][0],
+                                 kwargs['range'][1],
+                                 100)
+            w = zeros((len(par_range), rank(self.A)), dtype=complex)
+            for i, val in enumerate(par_range):
+                # set the parameter
+                exec("self.parameters['" + args[0] + "']=" + str(val))
+                # calculate the A matrix
+                self.linear(self.equib)
+                # calculate the eigenvalues
+                w[i] = eig(self.A)[0]
+            return w, par_range
+        else:
+            return eig(self.A)
 
-        # calculates inputs
-        u = self.inputs(t)
+    def plot(self, *args, **kwargs):
+        '''Makes a plot of the simulation'''
+        if args[0] == 'loci':
+            par = kwargs['param']
+            par_range = kwargs['range']
+            exec("w, p = self.eig(par, range=" + str(par_range) + ')')
+            for j in range(w.shape[1]):
+                scatter(w[:, j].real, w[:, j].imag, s=2, c=p,
+                                    cmap=cm.gist_rainbow,
+                                    edgecolors='none')
+                colorbar()
+                grid()
+                axis('equal')
+                title('Roci loci wrt to {param}'.format(param=par))
+        else:
+            intDict = pickle.load(open(self.name + '.p'))
+            plot(intDict['t'], intDict['x'])
+            legend(self.states)
+            xlabel('Time [sec]')
+        show()
 
-        xp = dot(self.A,x) + dot(self.B,u)
 
-        thetap = xp[0]
-        omegap = xp[1]
-
-        # plug in the derivatives for returning
-        f = zeros(2)
-        f[0] = thetap
-        f[1] = omegap
-
-        return f

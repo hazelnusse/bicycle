@@ -27,4 +27,4 @@ linpen = ds.LinearDynamicSystem([0., 0.])
 
 linpen.simulate()
 
-linpen.plot()
+linpen.plot('loci', param='g',range=(0.,5.))
