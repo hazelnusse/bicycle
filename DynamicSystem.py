@@ -181,6 +181,9 @@ class Pendulum(DynamicSystem):
     # model name
     name = 'Pendulum'
 
+    filename = string.join(string.split(name), "")
+    directory = 'models/' + filename + '/'
+
     # parameter names and their values
     parameters = {'g':9.81,
                   'l':1.,
