@@ -12,11 +12,13 @@ class DynamicSystem:
     """
     Dynamic System class.
 
+    
     """
 
     # model name
     name = 'Dynamic System'
 
+    # set parameter for saving files related to this system
     filename = string.join(string.split(name), "")
     directory = 'models/' + filename + '/'
 
@@ -62,6 +64,27 @@ class DynamicSystem:
         '''
         Returns the derivative of the states.
 
+        Parameters:
+        -----------
+        x : ndarray
+            State vector
+        t : ndarray
+            Time
+
+        Returns:
+        --------
+        f : ndarray
+            dx/dt
+
+        Raises:
+        -------
+
+        See also:
+        ---------
+
+        Examples:
+        ---------
+
         '''
 
         # defines the parameters from the attribute
@@ -93,6 +116,25 @@ class DynamicSystem:
         '''
         Returns the inputs to the system.
 
+        Parameters:
+        -----------
+        t : ndarray
+            Time
+
+        Returns:
+        --------
+        u : ndarray
+            u(t)
+
+        Raises:
+        -------
+
+        See also:
+        ---------
+
+        Examples:
+        ---------
+
         '''
         u = 1.
         return u
@@ -100,6 +142,25 @@ class DynamicSystem:
     def outputs(self, x):
         '''
         Returns the outputs of the system.
+
+        Parameters:
+        -----------
+        x : ndarray
+            Current state
+
+        Returns:
+        --------
+        y : ndarray
+            y(t)
+
+        Raises:
+        -------
+
+        See also:
+        ---------
+
+        Examples:
+        ---------
 
         '''
         y = zeros(len(self.output_names))
@@ -109,6 +170,25 @@ class DynamicSystem:
         return y
 
     def simulate(self):
+        '''
+        Simulates the system.
+
+        Parameters:
+        -----------
+
+        Returns:
+        --------
+
+        Raises:
+        -------
+
+        See also:
+        ---------
+
+        Examples:
+        ---------
+
+        '''
         # time vector
         t = linspace(self.numint['ti'],
                      self.numint['tf'],
@@ -168,7 +248,6 @@ class DynamicSystem:
         else:
             os.system('mkdir ' + self.directory)
         pickle.dump(intDict, open(self.directory + self.filename + '.p', 'w'))
-
 
     def plot(self):
         '''
@@ -388,9 +467,15 @@ class LinearPendulum(Pendulum):
         else:
             return eig(self.A)
 
-    def plot(self, *args, **kwargs):
+    def plot(self, typ=None, *args, **kwargs):
         '''Makes a plot of the simulation'''
-        if args[0] == 'loci':
+        # plot a graph with all the outputs
+        if typ == None:
+            intDict = pickle.load(open(self.name + '.p'))
+            plot(intDict['t'], intDict['x'])
+            legend(self.state_names)
+            xlabel('Time [sec]')
+        elif typ == 'loci':
             par = kwargs['param']
             par_range = kwargs['range']
             exec("w, p = self.eig(par, range=" + str(par_range) + ')')
@@ -402,9 +487,4 @@ class LinearPendulum(Pendulum):
                 grid()
                 axis('equal')
                 title('Roci loci wrt to {param}'.format(param=par))
-        else:
-            intDict = pickle.load(open(self.name + '.p'))
-            plot(intDict['t'], intDict['x'])
-            legend(self.state_names)
-            xlabel('Time [sec]')
         show()

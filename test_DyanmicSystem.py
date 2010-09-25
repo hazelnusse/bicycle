@@ -14,7 +14,7 @@ print "Integration parameters: ", pen.numint
 
 print "Evalute f: ", pen.f([1., 2.], 5.0)
 
-print "Evalute the input: ", pen.inputs(5.)
+print "Evalute the input: ", pen.inputs(0.001)
 
 print "Simulate and plot"
 pen.simulate()
@@ -27,4 +27,4 @@ linpen = ds.LinearPendulum([0., 0.])
 
 linpen.simulate()
 
-linpen.plot('loci', param='g',range=(0.,5.))
+linpen.plot(typ='loci', param='g',range=(0.,5.))
