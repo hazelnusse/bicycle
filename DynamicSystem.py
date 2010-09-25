@@ -5,14 +5,170 @@ from scipy.integrate import odeint
 from matplotlib.pyplot import figure, plot, show, legend, xlabel, title
 from matplotlib.pyplot import scatter, colorbar, cm, grid, axis
 import pickle
+import os
+import string
 
 class DynamicSystem:
-    """Dynamic System class.
+    """
+    Dynamic System class.
 
     """
 
     # model name
-    name = 'pendulum'
+    name = 'Dynamic System'
+
+    filename = string.join(string.split(name), "")
+    directory = 'models/' + filename + '/'
+
+    # parameter names and their values
+    parameters = {}
+
+    # state names
+    state_names = ['x1','x2']
+
+    # initialize state vector
+    x = zeros(len(state_names))
+
+    # output names
+    output_names = ['y1', 'y2']
+
+    # initialize output vector
+    y = zeros(len(state_names))
+
+    # input names
+    input_names = ['u1']
+
+    # initialize input vector
+    u = zeros(len(input_names))
+
+    # sets the time to the initial time
+    t = 0.
+
+    # initializes the zees
+    z = zeros(1)
+
+    # sets the initial conditions of the states
+    x_init = array([0., 0.])
+
+    # numerical integration parameters
+    numint = {'ti':0.,
+              'tf':1.,
+              'steps':10}
+
+    def __init__(self, model=None, parameters=None):
+        '''Does nothing now, but will parse the input text file'''
+
+    def f(self, x, t):
+        '''
+        Returns the derivative of the states.
+
+        '''
+
+        # defines the parameters from the attribute
+        for parameter, value in self.parameters.items():
+            exec(parameter + ' = ' + str(value))
+
+        # sets the current state
+        x1 = x[0]
+        x2 = x[1]
+
+        # calculates inputs
+        u = self.inputs(t)
+
+        # sets the zees
+        self.z[0] = 0.
+
+        # calculates the derivatives of the states
+        x1p = x2
+        x2p = 1.
+
+        # plug in the derivatives for returning
+        f = zeros(2)
+        f[0] = x1p
+        f[1] = x2p
+
+        return f
+
+    def inputs(self, t):
+        '''
+        Returns the inputs to the system.
+
+        '''
+        u = 1.
+        return u
+
+    def outputs(self, x):
+        '''
+        Returns the outputs of the system.
+
+        '''
+        y = zeros(len(self.output_names))
+        y[0] = x[0]
+        y[1] = x[1]
+
+        return y
+
+    def simulate(self):
+        # time vector
+        t = linspace(self.numint['ti'],
+                     self.numint['tf'],
+                     self.numint['steps'])
+
+        # initialize the state vector
+        x = zeros((len(t), len(self.state_names)))
+        y = zeros((len(t), len(self.output_names)))
+
+        # set the initial conditions
+        x[0] = self.x_init
+        y[0] = self.outputs(x[0])
+
+        for i in range(len(t)-1):
+            # set the interval
+            t_int = [t[i], t[i+1]]
+            print "self.t before int = ", self.t
+            # return the next state
+            x[i + 1] = odeint(self.f, x[i], t_int)[1, :]
+            print "self.t after int = ", self.t
+            # calculate the outputs and store them
+            y[i + 1] = self.outputs(x[i + 1])
+            # update all the attributes
+            self.t = t[i + 1]
+            self.x = x[i + 1]
+            self.y = y[i + 1]
+
+
+        # make a dictionary of the integration and save it to file
+        intDict = {'t':t,
+                   'x':x,
+                   'y':y,
+                   'model':self.name,
+                   'params':self.parameters}
+        if os.path.isdir(self.directory):
+            pass
+        else:
+            os.system('mkdir ' + self.directory)
+        pickle.dump(intDict, open(self.directory + self.filename + '.p', 'w'))
+
+    def plot(self):
+        '''
+        Makes a plot of the simulation
+
+        '''
+        intDict = pickle.load(open(self.directory + self.filename + '.p'))
+        plot(intDict['t'], intDict['y'])
+        legend(self.state_names)
+        xlabel('Time [sec]')
+        show()
+
+class Pendulum(DynamicSystem):
+    """
+    A simple one degree of freedom pendulum with length, mass and moment of
+    inertia.
+
+    """
+
+    # model name
+    name = 'Pendulum'
 
     # parameter names and their values
     parameters = {'g':9.81,
@@ -21,7 +177,7 @@ class DynamicSystem:
                   'i':1.}
 
     # state names and their initial conditions
-    states = ['theta',
+    state_names = ['theta',
               'omega']
 
     units = ['radians',
@@ -32,7 +188,7 @@ class DynamicSystem:
                     0.])
 
     # intialize state vector
-    x = zeros(len(states))
+    x = zeros(len(state_names))
 
     # sets the time to the initial time
     t = 0.
@@ -97,39 +253,7 @@ class DynamicSystem:
         torque = 10*sin(2*pi*t + pi/6)
         return torque
 
-    def simulate(self):
-        # time vector
-        t = linspace(self.numint['ti'],
-                     self.numint['tf'],
-                     self.numint['steps'])
-
-        # initialize the state vector
-        x = zeros((len(t), len(self.states)))
-
-        # set the initial conditions
-        x[0] = self.x_init
-
-        for i in range(len(t)-1):
-            # set the interval
-            t_int = [t[i], t[i+1]]
-            # return the next state
-            x[i + 1] = odeint(self.f, x[i], t_int)[1, :]
-            self.t = t[i+1]
-            self.x = x[i + 1]
-
-        # make a dictionary of the intergration and save it to file
-        intDict = {'t':t,'x':x,'model':self.name, 'params':self.parameters}
-        pickle.dump(intDict, open(self.name + '.p', 'w'))
-
-    def plot(self):
-        '''Makes a plot of the simulation'''
-        intDict = pickle.load(open(self.name + '.p'))
-        plot(intDict['t'], intDict['x'])
-        legend(self.states)
-        xlabel('Time [sec]')
-        show()
-
-class LinearDynamicSystem(DynamicSystem):
+class LinearPendulum(Pendulum):
 
     name = "Linear Pendulum"
 
@@ -235,7 +359,7 @@ class LinearDynamicSystem(DynamicSystem):
         else:
             intDict = pickle.load(open(self.name + '.p'))
             plot(intDict['t'], intDict['x'])
-            legend(self.states)
+            legend(self.state_names)
             xlabel('Time [sec]')
         show()
 
