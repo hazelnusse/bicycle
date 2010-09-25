@@ -154,11 +154,21 @@ class DynamicSystem:
                    'y':y,
                    'model':self.name,
                    'params':self.parameters}
+
+        # save the simulation to file
+        self.save_sim(intDict)
+
+    def save_sim(self, intDict):
+        '''
+        Save simulation to file
+
+        '''
         if os.path.isdir(self.directory):
             pass
         else:
             os.system('mkdir ' + self.directory)
         pickle.dump(intDict, open(self.directory + self.filename + '.p', 'w'))
+
 
     def plot(self):
         '''
