@@ -12,7 +12,7 @@ class DynamicSystem:
     """
     Dynamic System class.
 
-    
+
     """
 
     # model name
