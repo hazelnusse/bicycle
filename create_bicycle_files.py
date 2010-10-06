@@ -49,7 +49,7 @@ for k, v in udata.items():
             try:
                 nom = unumpy.nominal_values(val)
                 std = unumpy.std_devs(val)
-                line = k + '=' + str(nom) + ',' + str(std) + '\n'
+                line = k + '=[' + ','.join(str(nom)[1:-1].split()) + '],[' + ','.join(str(std)[1:-1].split()) + ']\n'
             except:
                 line = k + '=' + str(val) + '\n'
         print shortnames[i], line
@@ -59,7 +59,7 @@ lines = ('frameTorT=\n' +
         'frameComT=\n' +
         'forkTorT=\n' +
         'forkComT=\n' +
-        'rWheelTorT\n' +
+        'rWheelTorT=\n' +
         'rWheelComT=\n' +
         'fWheelTorT=\n' +
         'fWheelComT=\n')

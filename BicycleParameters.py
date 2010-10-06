@@ -1,9 +1,9 @@
 import os
 import pickle
 from uncertainties import ufloat, unumpy
-from numpy import pi, zeros, vstack, dot, mean, array, shape, ones
+from numpy import pi, zeros, vstack, dot, mean, array, shape, ones, zeros_like
 
-class bicycle(object):
+class Bicycle(object):
     # these are the various parameter sets
     ptypes = ['Benchmark', 'Sharp', 'Moore', 'Peterson']
 
@@ -12,14 +12,14 @@ class bicycle(object):
         # is there a data directory for this bicycle? if not, tell to put some
         # fucking data in the folder so we have something to work with!
         try:
-            if os.path.isdir('data/' + shortname) == True:
-                print "We have foundeth a directory named: data/" + shortname
-                return super(bicycle, cls).__new__(cls)
+            if os.path.isdir('bicycles/' + shortname) == True:
+                print "We have foundeth a directory named: bicycles/" + shortname
+                return super(Bicycle, cls).__new__(cls)
             else:
                 raise ValueError
         except:
             a = "Are you nuts?! Make a directory with basic data for your "
-            b = "bicycle in data/shortname, where 'shortname' is the "
+            b = "bicycle in bicycles/shortname, where 'shortname' is the "
             c = "capitalized one word name of your bicycle. Then I can "
             d = "actually created a bicycle object."
             print a+b+c+d
@@ -31,11 +31,11 @@ class bicycle(object):
 
         shortname: string
             shortname of your bicicleta, one word, first letter is capped and
-            should match a directory under data/
+            should match a directory under bicycles/
         '''
 
         self.shortname = shortname
-        self.directory = ('data/' + shortname + '/')
+        self.directory = ('bicycles/' + shortname + '/')
         self.params = {}
 
         # are there any parameters already listed? grab any parameters and
@@ -109,12 +109,47 @@ class bicycle(object):
         Calculates the parameters from measured data.
 
         '''
-
-        # load the measured data file
-        f = open(self.directory + self.shortname + 'Measured.p', 'r')
-        ddU = pickle.load(f)
-        f.close()
-        print ddU
+        # is there a ____Measured.p? if so, load it in
+        if os.path.isfile(self.directory + self.shortname + 'Measured.p'):
+            # load the measured data file
+            f = open(self.directory + self.shortname + 'Measured.p', 'r')
+            ddU = pickle.load(f)
+            f.close()
+        # else get the data from the original text file and save a pickled
+        # version
+        else:
+            f = open(self.directory + self.shortname + 'Measured.txt')
+            ddU = {}
+            for line in f:
+                list1 = line[:-1].split('=')
+                list2 = list1[1].split(',')
+                # 1. it is a string (name and shortname)
+                # 4. it is an array with a sigma array
+                # 5. if is an array with no sigma array
+                # 6. it is a variable name with no value
+                # 2. it is a float and a sigma
+                # 3. it is a float with no sigma
+                if list1[0] == 'name' or list1[0] == 'shortname':
+                    ddU[list1[0]] = list1[1]
+                elif list1[1] == '':
+                    # then there is no value for this one
+                    ddU[list1[0]] = None
+                elif list1[1][0] == '[':
+                    list2 = list1[1].split('],[')
+                    # then this one is an array
+                    noms = [float(a) for a in list2[0][1:].split(',')]
+                    if list2[1] == '':
+                        stds = zeros_like(noms)
+                    else:
+                        stds = [float(a) for a in list2[1][:-1].split(',')]
+                    ddU[list1[0]] = unumpy.uarray((noms, stds))
+                else:
+                    nom = float(list2[0])
+                    if list2[1] == '':
+                        std = 0.
+                    else:
+                        std = float(list2[1])
+                    ddU[list1[0]] = ufloat((nom, std))
 
         # calculate all the benchmark parameters
         par = {}
@@ -164,34 +199,32 @@ class bicycle(object):
         forkB = - par['rF'] - forkMassDist/cb + par['w']*tb
 
         # intialize the matrices for the center of mass locations
-        frameCoM = zeros((2, shape(frameM)[1]), dtype='object')
-        forkCoM = zeros((2, shape(forkM)[1]), dtype='object')
+        frameCoM = zeros((2), dtype='object')
+        forkCoM = zeros((2), dtype='object')
 
-        # for each of the bikes...
-        for i in range(shape(frameM)[1]):
-            comb = array([[0, 1], [0, 2], [1, 2]])
-            # calculate the frame center of mass position
-            # initialize the matrix to store the line intersections
-            lineX = zeros((3, 2), dtype='object')
-            # for each line intersection...
-            for j, row in enumerate(comb):
-                a = unumpy.matrix(vstack([-frameM[row, i], ones((2))]).T)
-                b = frameB[row, i]
-                lineX[j] = dot(a.I, b)
-            frameCoM[:, i] = mean(lineX, axis=0)
-            # calculate the fork center of mass position
-            # reinitialize the matrix to store the line intersections
-            lineX = zeros((3, 2), dtype='object')
-            # for each line intersection...
-            for j, row in enumerate(comb):
-                a = unumpy.matrix(vstack([-forkM[row, i], ones((2))]).T)
-                b = forkB[row, i]
-                lineX[j] = dot(a.I, b)
-            forkCoM[:, i] = mean(lineX, axis=0)
+        comb = array([[0, 1], [0, 2], [1, 2]])
+        # calculate the frame center of mass position
+        # initialize the matrix to store the line intersections
+        lineX = zeros((3, 2), dtype='object')
+        # for each line intersection...
+        for j, row in enumerate(comb):
+            a = unumpy.matrix(vstack([-frameM[row], ones((2))]).T)
+            b = frameB[row]
+            lineX[j] = dot(a.I, b)
+        frameCoM[:] = mean(lineX, axis=0)
+        # calculate the fork center of mass position
+        # reinitialize the matrix to store the line intersections
+        lineX = zeros((3, 2), dtype='object')
+        # for each line intersection...
+        for j, row in enumerate(comb):
+            a = unumpy.matrix(vstack([-forkM[row], ones((2))]).T)
+            b = forkB[row]
+            lineX[j] = dot(a.I, b)
+        forkCoM[:] = mean(lineX, axis=0)
 
-        par['xB'] = frameCoM[0, :]
-        par['zB'] = frameCoM[1, :]
-        par['xH'] = forkCoM[0, :]
-        par['zH'] = forkCoM[1, :]
+        par['xB'] = frameCoM[0]
+        par['zB'] = frameCoM[1]
+        par['xH'] = forkCoM[0]
+        par['zH'] = forkCoM[1]
 
         self.params['Benchmark'] = par
