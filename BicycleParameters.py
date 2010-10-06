@@ -1,7 +1,10 @@
 import os
 import pickle
 from uncertainties import ufloat, unumpy
-from numpy import pi, zeros, vstack, dot, mean, array, shape, ones, zeros_like
+from numpy import pi, zeros, vstack, dot, mean, array, shape
+from numpy import sqrt, linspace, exp, sin, cos, dot, ones, zeros_like
+from numpy.linalg import inv
+from scipy.optimize import leastsq
 
 class Bicycle(object):
     # these are the various parameter sets
@@ -228,3 +231,105 @@ class Bicycle(object):
         par['zH'] = forkCoM[1]
 
         self.params['Benchmark'] = par
+
+def fit_data(filename):
+    '''
+    Returns the period and uncertainty for a decaying oscillation.
+
+    Parameters
+    ----------
+    filename : string
+        directory + filename of the pickled data file
+
+    Returns
+    -------
+    T : ufloat
+        the period of oscillation and its uncertainty
+
+    '''
+    df = open(filename)
+    pendDat = pickle.load(df)
+    df.close()
+    y = pendDat['data'].ravel()
+    time = pendDat['duration']
+    x = linspace(0, time, num=len(y))
+    # decaying oscillating exponential function
+    fitfunc = lambda p, t: p[0] + exp(-p[3]*p[4]*t)*(p[1]*sin(p[4]*sqrt(1-p[3]**2)*t) + p[2]*cos(p[4]*sqrt(1-p[3]**2)*t))
+    # initial guesses
+    p0 = np.array([1.35, -.5, -.75, 0.01, 3.93])
+    # create the error function
+    errfunc = lambda p, t, y: fitfunc(p, t) - y
+    # minimize the error function
+    p1, success = op.leastsq(errfunc, p0[:], args=(x, y))
+    # plot the fitted curve
+    lscurve = fitfunc(p1, x)
+    rsq, SSE, SST, SSR = fit_goodness(y, lscurve)
+    sigma = sqrt(SSE/(len(y)-len(p0)))
+    # calculate the jacobian
+    L = jac_fitfunc(p1, x)
+    # the Hessian
+    H = dot(L.T, L)
+    # the covariance matrix
+    U = sigma**2.*np.linalg.inv(H)
+    # the standard deviations
+    sigp = sqrt(U.diagonal())
+    # frequency and period
+    wo = ufloat((p1[4], sigp[4]))
+    zeta = ufloat((p1[3], sigp[3]))
+    wd = (1. - zeta**2.)**(1./2.)*wo
+    f = wd/2./np.pi
+    return T = 1./f
+
+def jac_fitfunc(p, t):
+    '''
+    Calculate the Jacobian of a decaying oscillation function.
+
+    Uses the analytical formulations of the partial derivatives.
+
+    Parameters:
+    -----------
+    p : the five parameters of the equation
+    t : time vector
+
+    Returns:
+    --------
+    jac : The jacobian, the partial of the vector function with respect to the
+    parameters vector. A 5 x N matrix where N is the number of time steps.
+
+    '''
+    jac = zeros((len(p), len(t)))
+    e = exp(-p[3]*p[4]*t)
+    dampsq = sqrt(1 - p[3]**2)
+    s = sin(dampsq*p[4]*t)
+    c = cos(dampsq*p[4]*t)
+    jac[0] = ones_like(t)
+    jac[1] = e*s
+    jac[2] = e*c
+    jac[3] = -p[4]*t*e*(p[1]*s + p[2]*c) + e*(-p[1]*p[3]*p[4]*t/dampsq*c
+            + p[2]*p[3]*p[4]*t/dampsq*s)
+    jac[4] = -p[3]*t*e*(p[1]*s + p[2]*c) + e*dampsq*t*(p[1]*c - p[2]*s)
+    return jac.T
+
+def fit_goodness(ym, yp):
+    '''
+    Calculate the goodness of fit.
+
+    Parameters:
+    ----------
+    ym : vector of measured values
+    yp : vector of predicted values
+
+    Returns:
+    --------
+    rsq: r squared value of the fit
+    SSE: error sum of squares
+    SST: total sum of squares
+    SSR: regression sum of squares
+
+    '''
+    from numpy import sum, mean
+    SSR = sum((yp - mean(ym))**2)
+    SST = sum((ym - mean(ym))**2)
+    SSE = SST - SSR
+    rsq = SSR/SST
+    return rsq, SSE, SST, SSR
