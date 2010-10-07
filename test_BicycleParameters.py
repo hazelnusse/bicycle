@@ -4,3 +4,5 @@ import BicycleParameters as BP
 booger = BP.Bicycle('booger')
 
 Browser = BP.Bicycle('Browser')
+
+Browser.calculate_from_measured()

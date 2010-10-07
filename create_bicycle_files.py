@@ -55,14 +55,14 @@ for k, v in udata.items():
         print shortnames[i], line
         f[i].write(line)
 
-lines = ('frameTorT=\n' +
-        'frameComT=\n' +
-        'forkTorT=\n' +
-        'forkComT=\n' +
-        'rWheelTorT=\n' +
-        'rWheelComT=\n' +
-        'fWheelTorT=\n' +
-        'fWheelComT=\n')
+lines = ('FrameTorsionalT=\n' +
+        'FrameCompoundT=\n' +
+        'ForkTorsionalT=\n' +
+        'ForkCompoundT=\n' +
+        'RwheelTorsionalT=\n' +
+        'RwheelCompoundT=\n' +
+        'FwheelTorsionalT=\n' +
+        'FwheelCompoundT=\n')
 
 for openfile in f:
     openfile.write(lines)

@@ -154,6 +154,38 @@ class Bicycle(object):
                         std = float(list2[1])
                     ddU[list1[0]] = ufloat((nom, std))
 
+        for k, v in ddU.items():
+            if k[-1] == 'T' and v == None:
+                print k
+                # then this is a period that has no value, so we should
+                # calculate it from the oscillation data
+                body, pendulum = space_out_camel_case(k[:-1]).strip().split(' ')
+                # now find the files that matches
+                Tdict = {}
+                for f in os.listdir(self.directory):
+                    flist = space_out_camel_case(f[:-2]).strip().split(' ')
+                    # now you have [bike, body, pend, angle, measurement]
+                    bikematch = self.shortname == flist[0]
+                    bodymatch = body.capitalize() == flist[1]
+                    try:
+                        pendmatch = pendulum == flist[2]
+                    except:
+                        pendmatch = False
+                    if bikematch and bodymatch and pendmatch:
+                        try:
+                            Tdict[flist[3][:-1]].append(flist[3][-1])
+                        except:
+                            Tdict[flist[3][:-1]] = [flist[3][-1]]
+                    # now you have something like:
+                    # Tdict = {'First':['1','2','3'],
+                    #          'Second':['1','2','3'],
+                    #          'Third':['1','2','3']}
+                for k, v in Tdict.items():
+                    Tdict[k] = len(v)
+                print Tdict
+
+
+
         # calculate all the benchmark parameters
         par = {}
 
@@ -278,7 +310,8 @@ def fit_data(filename):
     zeta = ufloat((p1[3], sigp[3]))
     wd = (1. - zeta**2.)**(1./2.)*wo
     f = wd/2./np.pi
-    return T = 1./f
+    # return the period
+    return 1./f
 
 def jac_fitfunc(p, t):
     '''
@@ -333,3 +366,12 @@ def fit_goodness(ym, yp):
     SSE = SST - SSR
     rsq = SSR/SST
     return rsq, SSE, SST, SSR
+
+def space_out_camel_case(s):
+        """Adds spaces to a camel case string.  Failure to space out string
+        returns the original string.
+        >>> space_out_camel_case('DMLSServicesOtherBSTextLLC')
+        'DMLS Services Other BS Text LLC'
+        """
+        import re
+        return re.sub('((?=[A-Z][a-z])|(?<=[a-z])(?=[A-Z]))', ' ', s)
