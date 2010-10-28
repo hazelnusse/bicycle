@@ -12,7 +12,8 @@ class Bicycle(object):
 
     def __new__(cls, shortname):
         '''Returns a NoneType object if there is no directory'''
-        # is there a data directory for this bicycle? if not, tell to put some
+        # is there a data directory for this bicycle? if not, tell the user to
+        # put some
         # fucking data in the folder so we have something to work with!
         try:
             if os.path.isdir('bicycles/' + shortname) == True:
