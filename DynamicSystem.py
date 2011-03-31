@@ -18,10 +18,6 @@ class DynamicSystem:
     # model name
     name = 'Dynamic System'
 
-    # set parameter for saving files related to this system
-    filename = string.join(string.split(name), "")
-    directory = 'models/' + filename + '/'
-
     # parameter names and their values
     parameters = {}
 
@@ -58,7 +54,10 @@ class DynamicSystem:
               'steps':10}
 
     def __init__(self, model=None, parameters=None):
-        '''Does nothing now, but will parse the input text file'''
+        '''Will parse the input text file'''
+        # set parameter for saving files related to this system
+        self.filename = string.join(string.split(self.name), "")
+        self.directory = os.path.join('models', self.filename)
 
     def f(self, x, t):
         '''
