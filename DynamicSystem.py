@@ -198,10 +198,16 @@ class DynamicSystem:
                      self.intOpts['tf'],
                      (self.intOpts['tf']-self.intOpts['ti'])/self.intOpts['ts'])
 
+        print self.stateNames
+        print self.outputNames
+        print self.inputNames
+
         # initialize the vectors
         x = zeros((len(t), len(self.stateNames)))
         y = zeros((len(t), len(self.outputNames)))
         u = zeros((len(t), len(self.inputNames)))
+
+        print u.shape
 
         # set the initial conditions
         x[0] = self.initialConditions
@@ -209,6 +215,7 @@ class DynamicSystem:
         u[0] = self.inputs(t[0])
 
         for i in range(len(t)-1):
+            print 't =', t[i]
             # set the interval
             t_int = [t[i], t[i+1]]
             #print "self.t before int = ", self.t
