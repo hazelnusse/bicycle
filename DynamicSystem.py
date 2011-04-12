@@ -374,7 +374,7 @@ class Pendulum(DynamicSystem):
         k = 0.125*(m*self.z[4]**2+4*i*self.z[3]**2)*omega**2
         p = -0.5*g*l*m*self.z[1]
         th2 = 2*theta
-        y = array([x[0], x[1], k, p, th2])
+        y = array([theta, omega, k, p, th2])
         return y
 
 class LinearPendulum(Pendulum):
