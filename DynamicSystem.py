@@ -16,48 +16,52 @@ class DynamicSystem:
     """
 
     # model name
-    name = 'Dynamic System'
+    name = 'DynamicSystem'
+
+    filename = ''.join(name.split())
+    directory = 'models/' + filename + '/'
+
+    # numerical integration parameters
+    intOpts = {'ti':0.0,
+               'tf':1.0,
+               'ts':0.1}
 
     # parameter names and their values
     parameters = {}
 
     # state names
-    state_names = ['x1','x2']
+    stateNames = ['x1',
+                  'x2']
 
-    # initialize state vector
-    x = zeros(len(state_names))
-
-    # output names
-    output_names = ['y1', 'y2']
-
-    # initialize output vector
-    y = zeros(len(output_names))
+    # sets the initial conditions of the states
+    initialConditions = [0.0,
+                         0.0]
 
     # input names
-    input_names = ['u1']
+    inputNames = ['u1']
+
+    # output names
+    outputNames = ['y1',
+                  'y2']
+
+    # initialize state vector
+    x = zeros(len(stateNames))
+
+    # initialize output vector
+    y = zeros(len(outputNames))
 
     # initialize input vector
-    u = zeros(len(input_names))
-
-    # sets the time to the initial time
-    t = 0.
+    u = zeros(len(inputNames))
 
     # initializes the zees
     z = zeros(1)
 
-    # sets the initial conditions of the states
-    x_init = array([0., 0.])
+    # sets the time to the initial time
+    t = 0.0
 
-    # numerical integration parameters
-    numint = {'ti':0.,
-              'tf':1.,
-              'steps':10}
 
     def __init__(self, model=None, parameters=None):
-        '''Will parse the input text file'''
-        # set parameter for saving files related to this system
-        self.filename = string.join(string.split(self.name), "")
-        self.directory = os.path.join('models', self.filename)
+        '''Nothing'''
 
     def f(self, x, t):
         '''
@@ -91,11 +95,13 @@ class DynamicSystem:
             exec(parameter + ' = ' + str(value))
 
         # sets the current state
-        x1 = x[0]
-        x2 = x[1]
+        for i, name in enumerate(self.stateNames):
+            exec(name + ' = ' + 'x[' + str(i) + ']')
 
         # calculates inputs
         u = self.inputs(t)
+        for i, name in enumerate(self.inputNames):
+            exec(name + ' = ' + 'self.u[' + str(i) + ']')
 
         # sets the zees
         self.z[0] = 0.
@@ -105,15 +111,14 @@ class DynamicSystem:
         x2p = 1.
 
         # plug in the derivatives for returning
-        f = zeros(2)
-        f[0] = x1p
-        f[1] = x2p
+        f = zeros(len(self.stateNames))
+        for i, name in enumerate(self.stateNames):
+            exec('f[' + str(i) + '] = ' + name + 'p')
 
         return f
 
     def inputs(self, t):
-        '''
-        Returns the inputs to the system.
+        '''Returns the inputs to the system.
 
         Parameters:
         -----------
@@ -162,7 +167,7 @@ class DynamicSystem:
         ---------
 
         '''
-        y = zeros(len(self.output_names))
+        y = zeros(len(self.outputNames))
         y[0] = x[0]
         y[1] = x[1]
 
@@ -189,17 +194,17 @@ class DynamicSystem:
 
         '''
         # time vector
-        t = linspace(self.numint['ti'],
-                     self.numint['tf'],
-                     self.numint['steps'])
+        t = linspace(self.intOpts['ti'],
+                     self.intOpts['tf'],
+                     (self.intOpts['tf']-self.intOpts['ti'])/self.intOpts['ts'])
 
-        # initialize the state vector
-        x = zeros((len(t), len(self.state_names)))
-        y = zeros((len(t), len(self.output_names)))
-        u = zeros((len(t), len(self.input_names)))
+        # initialize the vectors
+        x = zeros((len(t), len(self.stateNames)))
+        y = zeros((len(t), len(self.outputNames)))
+        u = zeros((len(t), len(self.inputNames)))
 
         # set the initial conditions
-        x[0] = self.x_init
+        x[0] = self.initialConditions
         y[0] = self.outputs(x[0])
         u[0] = self.inputs(t[0])
 
@@ -255,131 +260,13 @@ class DynamicSystem:
         '''
         intDict = pickle.load(open(self.directory + self.filename + '.p'))
         plot(intDict['t'], intDict['y'])
-        legend(self.output_names)
+        legend(self.outputNames)
         xlabel('Time [sec]')
         show()
 
-class Pendulum(DynamicSystem):
-    """
-    A simple one degree of freedom pendulum with length, mass and moment of
-    inertia and input torque.
+class LinearDynamicSystem(DynamicSystem):
 
-    """
-
-    # model name
-    name = 'Pendulum'
-
-    filename = string.join(string.split(name), "")
-    directory = 'models/' + filename + '/'
-
-    # parameter names and their values
-    parameters = {'g':9.81,
-                  'l':1.,
-                  'm':1.,
-                  'i':1.}
-
-    # state names and their initial conditions
-    state_names = ['theta',
-                   'omega']
-
-    # sets the initial conditions of the states
-    x_init = array([0.,
-                    0.])
-
-    # intialize state vector
-    x = zeros(len(state_names))
-
-    # output names
-    output_names = ['theta',
-                    'omega',
-                    'kinetic energy',
-                    'potential energy',
-                    '2*theta']
-
-    # initialize output vector
-    y = zeros(len(output_names))
-
-    # input names
-    input_names = ['torque']
-
-    # initialize input vector
-    u = zeros(len(input_names))
-
-    # sets the time to the initial time
-    t = 0.
-
-    # initializes the zees
-    z = zeros(17)
-
-    # numerical integration parameters
-    numint = {'ti':0.,
-              'tf':10.,
-              'steps':100}
-
-    def __init__(self):
-        '''Does nothing'''
-
-    def f(self, x, t):
-        '''Returns the derivative of the states'''
-
-        # defines the parameters from the attribute
-        for parameter, value in self.parameters.items():
-            exec(parameter + ' = ' + str(value))
-
-        # sets the current state
-        theta = x[0]
-        omega = x[1]
-
-        # calculates inputs
-        torque = self.inputs(t)
-
-        # sets the zees
-        self.z[1] = cos(theta)
-        self.z[2] = sin(theta)
-        self.z[3] = self.z[1]**2 + self.z[2]**2
-        self.z[4] = l*self.z[3]
-        self.z[8] = g*m
-        self.z[9] = torque*self.z[3] - 0.5*self.z[8]*self.z[2]*self.z[4]
-        self.z[10] = i*self.z[3]
-        self.z[11] = self.z[3]*self.z[10] + 0.25*m*self.z[4]**2
-        self.z[12] = self.z[9]/self.z[11]
-        self.z[13] = self.z[8]*self.z[1]*self.z[4]/self.z[11]
-        self.z[14] = (m*self.z[4]**2+4*i*self.z[3]**2)*omega
-        self.z[15] = g*l*m
-        self.z[16] = self.z[15]*self.z[2]
-
-        # calculates the derivatives of the states
-        thetap = omega
-        omegap = self.z[12]
-
-        # plug in the derivatives for returning
-        f = zeros(2)
-        f[0] = thetap
-        f[1] = omegap
-
-        return f
-
-    def inputs(self, t):
-        torque = 10*sin(2*pi*t + pi/6)
-        u = torque
-        return u
-
-    def outputs(self, x):
-        # defines the parameters locally from the attribute
-        for parameter, value in self.parameters.items():
-            exec(parameter + ' = ' + str(value))
-        theta = x[0]
-        omega = x[1]
-        # calculate the outputs
-        k = 0.125*(m*self.z[4]**2+4*i*self.z[3]**2)*omega**2
-        p = -0.5*g*l*m*self.z[1]
-        th2 = 2*theta
-        y = array([theta, omega, k, p, th2])
-        return y
-
-class LinearPendulum(Pendulum):
-
-    name = "Linear Pendulum"
+    name = "LinearDynamicSystem"
 
     def __init__(self, equi_points):
         '''This function should take the equilibrium points and calculate the
