@@ -59,7 +59,6 @@ class DynamicSystem:
     # sets the time to the initial time
     t = 0.0
 
-
     def __init__(self, model=None, parameters=None):
         '''Nothing'''
 
